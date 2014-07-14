@@ -23,6 +23,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "my_allocator.h"
 #include <math.h>
 
@@ -35,6 +36,7 @@
       int  is_free;            // 0 = free, 1 = not free
       int binary_Index;        // 2^binary_index = size
       int side;                // left = 0; right = 1; no side = 2
+	  int inheritance;		// left block holds parent's side; right block holds parent's inheritance; same as size
       int size;                // size of the block 
       struct header* next;		// points to next block
       struct header* prev;		// points to previous block
@@ -65,9 +67,9 @@
 //*******************************************************
 //            REMOVE FROM FREELIST
 //*******************************************************
-void remove(HDR * _h){
+void _remove(HDR * _h){
   if(_h -> prev == NULL && _h -> next == NULL){          // only element in list
-           printf("%s\n", "Remove: Only element in List");
+           printf("Remove: Only element in List\n");
           freeList[_h ->binary_Index] = NULL;
         }
   if(_h -> prev == NULL && _h -> next != NULL){         // first element in list
@@ -94,14 +96,16 @@ void remove(HDR * _h){
 //           SPLIT BLOCK
 //*******************************************************
 void SplitBlocks ( HDR * _h){
- 
     if(_h -> MagicNumber == 3028){
         int b_index = _h -> binary_Index -1;
-        int newsize = pow(2,b_index);
-        HDR * _hR = (Addr)(_h + newsize);     // error need to change _hR's adress 
-        // remove _h from freelist
-        remove(_h);
+        int newsize = pow(2,b_index)* blocksize;
+        HDR * _hR = (Addr)((char*)_h + newsize);     // error need to change _hR's address 
+        // _remove _h from freelist
+        _remove(_h);
         // set variables for _h and _hR
+		_hR -> inheritance = _h -> inheritance;
+		_h -> inheritance = _h -> side;
+		
         _h -> MagicNumber = 3028;      
         _h ->  is_free = 0;            
         _h -> binary_Index = b_index;        
@@ -127,8 +131,8 @@ void SplitBlocks ( HDR * _h){
           _h -> prev = NULL;
           freeList[b_index] = _h;
         }
-        printf("%s %d %d\n"," location of _h with size of:", _h, newsize);
-        printf("%s %d %d\n"," location of _hR with size of:", _hR , newsize);
+        printf("%s %u %d\n"," location of _h with size of:", _h, newsize);
+        printf("%s %u %d\n"," location of _hR with size of:", _hR , newsize);
     }
     else
       printf("%s\n", "Error no magic number found, ");
@@ -138,29 +142,30 @@ void SplitBlocks ( HDR * _h){
 //             MERGE BLOCKS
 //*******************************************************
 void MergeBlocks ( HDR * _h){
+  if(_h->MagicNumber == 3028){
   int newindex = _h -> binary_Index +1;
-  int newsize = pow(2,newindex);
+  int newsize = pow(2,newindex) * blocksize;
   HDR * _h_ = NULL;
 
-  if(_h->MagicNumber == 3028){
       if (_h -> side == 0){                      // if right block side check if right block is free
-         HDR * temp = (Addr)(_h + _h->size);
+         HDR * temp = (Addr)((char*)_h + _h->size);
          _h_ = temp;}
       else{                                      // vice-versa
-         HDR * temp = (Addr)(_h - _h->size);
+         HDR * temp = (Addr)((char*)_h - _h->size);
          _h_ = temp;}
 
       if(_h -> is_free == 0){                   
         if(_h_ -> MagicNumber == 3028){
-            if(_h_ -> is_free == 0){             // remove 2 blocks from free list
+            if(_h_ -> is_free == 0){             // _remove 2 blocks from free list
               if(_h_ -> size == _h -> size){
-                 remove(_h);
-                 remove(_h_);
+                 _remove(_h);
+                 _remove(_h_);
                  if (_h -> side == 0){            // assign new values to the block on left (must check which block is left )
                     _h -> MagicNumber = 3028;      
                     _h ->  is_free = 0;            
                     _h -> binary_Index = newindex;        
-                    _h -> side = 2;                
+                    _h -> side = _h -> inheritance;
+					_h -> inheritance = _h_ -> inheritance;
                     _h -> size = newsize; 
                     if(freeList[newindex] == NULL){   // add the updated header into freeList
                       freeList[newindex] = _h;
@@ -179,7 +184,8 @@ void MergeBlocks ( HDR * _h){
                     _h_ -> MagicNumber = 3028;      
                     _h_ ->  is_free = 0;            
                     _h_ -> binary_Index = newindex;        
-                    _h_ -> side = 2;                
+                    _h_ -> side = _h_ -> inheritance;
+					_h_ -> inheritance = _h -> inheritance;               
                     _h_ -> size = newsize; 
                     if(freeList[newindex] == NULL){  
                       freeList[newindex] = _h_;
@@ -237,7 +243,8 @@ extern unsigned int init_allocator(unsigned int _basic_block_size, unsigned int 
   a-> MagicNumber = 3028;
   a-> is_free = 0;				
   a-> binary_Index = index;
-  a-> side = 2;				
+  a-> side = 2;
+  a-> inheritance = 2;
   a-> size = BlockNum * _basic_block_size;
   a-> next = NULL;
   a-> prev = NULL;
@@ -253,31 +260,46 @@ extern unsigned int init_allocator(unsigned int _basic_block_size, unsigned int 
 
 /* Don't forget to implement "init_allocator" and "release_allocator"! */
 
-extern void check_list(){//int list_index) {
+void check_list(){//int list_index) {
     if(freeList[index] != NULL){
       printf("%s %d %d\n", "Size of Free List", index, freeList);
       printf("%s %d\n", "Pointer of header of first element" ,freeList[index] );
-      printf("%s %d\n", "Pointer to toal memory", totalMemory );
+      printf("%s %d\n", "Pointer to total memory", totalMemory );
       printf("%s\n\n","Starting Split 1");
       SplitBlocks(freeList[index]);
+	       print_freeList();
       printf("%s\n\n","Starting Split 2");
       SplitBlocks(freeList[index-1]);
+	       print_freeList();
       printf("%s\n\n","Starting Split 3");
-      SplitBlocks(freeList[index-2]);
+      SplitBlocks(freeList[index-1]);
+	       print_freeList();
       printf("%s\n\n","Starting Split 4");
-      SplitBlocks(freeList[index-3]);
+      SplitBlocks(freeList[index-2]);
+	       print_freeList();
       printf("%s\n\n","Starting Split 5");
-      SplitBlocks(freeList[index-4]);
-      print_freeList();
+      SplitBlocks(freeList[index-2]);
+			print_freeList();
+	   printf("%s\n\n","Starting Split 6");
+      SplitBlocks(freeList[index-2]);
+	       print_freeList();
+      printf("%s\n\n","Starting Split 7");
+      SplitBlocks(freeList[index-2]);
+			print_freeList();
+			 printf("%s\n\n","Starting Split 8");
+      SplitBlocks(freeList[index-3]);
+			print_freeList();
       printf("%s\n\n","Starting Merge");
-      MergeBlocks(freeList[index-5]);
+      MergeBlocks(freeList[index-4]);
+			print_freeList();
       // BUGGY BUGGY BUGGY
-     // printf("%s\n\n","Starting Merge 2");
-     // MergeBlocks(freeList[index-4]);
-      //printf("%d\n", (HDR*) freeList[index]->MagicNumber );
+     printf("%s\n\n","Starting Merge 2");
+      MergeBlocks(freeList[index-3]);
+	  print_freeList();
+     // printf("%d\n", (HDR*) freeList[index]->MagicNumber );
     }
 }
-extern void print_freeList(){
+void print_freeList(){
   int i;
   for (i = 0 ; i <= index; i++){
     int a = pow(2, i);
@@ -300,7 +322,7 @@ extern Addr my_malloc(unsigned int _length) {
   int j;
   for (j = indexx; j < index; j++){     // find the available free block
     if (freeList[indexx] != NULL){
-                                        // remove from free list 
+                                        // _remove from free list 
       a = (HDR * )freeList[indexx];
       a -> is_free = 1;
       a -> next -> prev = NULL;
