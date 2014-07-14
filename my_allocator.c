@@ -153,46 +153,49 @@ void MergeBlocks ( HDR * _h){
       if(_h -> is_free == 0){                   
         if(_h_ -> MagicNumber == 3028){
             if(_h_ -> is_free == 0){             // remove 2 blocks from free list
-               remove(_h);
-               remove(_h_);
-               if (_h -> side == 0){            // assign new values to the block on left (must check which block is left )
-                  _h -> MagicNumber = 3028;      
-                  _h ->  is_free = 0;            
-                  _h -> binary_Index = newindex;        
-                  _h -> side = 2;                
-                  _h -> size = newsize; 
-                  if(freeList[newindex] == NULL){   // add the updated header into freeList
-                    freeList[newindex] = _h;
-                    _h -> prev = NULL;
-                    _h -> next = NULL;
-                  }
-                  else{
-                    _h -> next = freeList[newindex];
-                    freeList[newindex] -> prev = _h;
-                    _h -> prev = NULL;
-                    freeList[newindex] = _h;
-                  }                
-                   
-               }
-               else{
-                  _h_ -> MagicNumber = 3028;      
-                  _h_ ->  is_free = 0;            
-                  _h_ -> binary_Index = newindex;        
-                  _h_ -> side = 2;                
-                  _h_ -> size = newsize; 
-                  if(freeList[newindex] == NULL){  
-                    freeList[newindex] = _h_;
-                    _h_ -> prev = NULL;
-                    _h_ -> next = NULL;
-                  }
-                  else{
-                    _h_ -> next = freeList[newindex];
-                    freeList[newindex] -> prev = _h_;
-                    _h_ -> prev = NULL;
-                    freeList[newindex] = _h_;
-                  }
-               }
-
+              if(_h_ -> size == _h -> size){
+                 remove(_h);
+                 remove(_h_);
+                 if (_h -> side == 0){            // assign new values to the block on left (must check which block is left )
+                    _h -> MagicNumber = 3028;      
+                    _h ->  is_free = 0;            
+                    _h -> binary_Index = newindex;        
+                    _h -> side = 2;                
+                    _h -> size = newsize; 
+                    if(freeList[newindex] == NULL){   // add the updated header into freeList
+                      freeList[newindex] = _h;
+                      _h -> prev = NULL;
+                      _h -> next = NULL;
+                    }
+                    else{
+                      _h -> next = freeList[newindex];
+                      freeList[newindex] -> prev = _h;
+                      _h -> prev = NULL;
+                      freeList[newindex] = _h;
+                    }                
+                     
+                 }
+                 else{
+                    _h_ -> MagicNumber = 3028;      
+                    _h_ ->  is_free = 0;            
+                    _h_ -> binary_Index = newindex;        
+                    _h_ -> side = 2;                
+                    _h_ -> size = newsize; 
+                    if(freeList[newindex] == NULL){  
+                      freeList[newindex] = _h_;
+                      _h_ -> prev = NULL;
+                      _h_ -> next = NULL;
+                    }
+                    else{
+                      _h_ -> next = freeList[newindex];
+                      freeList[newindex] -> prev = _h_;
+                      _h_ -> prev = NULL;
+                      freeList[newindex] = _h_;
+                    }
+                }
+              }
+              else
+                printf("%s\n","Not the same size blocks" );
             }
             else
               printf("%s\n","Memory Location for second block is not free" );
@@ -267,10 +270,10 @@ extern void check_list(){//int list_index) {
       SplitBlocks(freeList[index-4]);
       print_freeList();
       printf("%s\n\n","Starting Merge");
-      MergeBlocks(freeList[index-1]);
+      MergeBlocks(freeList[index-5]);
       // BUGGY BUGGY BUGGY
      // printf("%s\n\n","Starting Merge 2");
-     // MergeBlocks(freeList[index-1]);
+     // MergeBlocks(freeList[index-4]);
       //printf("%d\n", (HDR*) freeList[index]->MagicNumber );
     }
 }
