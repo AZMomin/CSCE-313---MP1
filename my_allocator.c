@@ -31,7 +31,7 @@
 /* DATA STRUCTURES */ 
 /*--------------------------------------------------------------------------*/
 
-    typedef struct header{
+  /*  typedef struct header{
       int MagicNumber;      //initial check to ensure correct address
       int  is_free;            // 0 = free, 1 = not free
       int binary_Index;        // 2^binary_index = size
@@ -40,7 +40,7 @@
       int size;                // size of the block 
       struct header* next;    // points to next block
       struct header* prev;    // points to previous block
-} HDR;
+} HDR;*/
 
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
@@ -279,7 +279,9 @@ extern unsigned int init_allocator(unsigned int _basic_block_size, unsigned int 
 
 
 /* Don't forget to implement "init_allocator" and "release_allocator"! */
-
+//**********************************************************
+//						IGNORE CHECK_LIST() - purely for testing purposes
+//**********************************************************
 void check_list(){//int list_index) {
     if(freeList[index] != NULL){
       printf("%s %d %d\n", "Size of Free List", index, freeList);
@@ -347,7 +349,7 @@ void print_freeList(){
   }
   printf("\n");
 }
-extern Addr my_malloc(unsigned int _length) {
+Addr my_malloc(unsigned int _length) {
   /* This preliminary implementation simply hands the call over the 
      the C standard library! 
      Of course this needs to be replaced by your implementation.*/
@@ -368,43 +370,47 @@ extern Addr my_malloc(unsigned int _length) {
   printf("%s %d\n","Valid Index: ",valid_index);
   printf("%s %d\n","Valid Length: ",valid_length);
 
-  if (index < valid_index)
+  if (index < valid_index){
     printf("%s\n","Error: requested memory - too large");
+	return NULL;
+	}
   else{
-    int _index = valid_index;
-    while(freeList[_index] == NULL){
-      _index++;
-    }
-    printf("%s %d\n","New valid Index: ",_index);
-    if(_index > index)
-      printf("%s\n","Cannot Provide Memory Block" );
-    else{
-      while (_index > valid_index){
-        SplitBlocks(freeList[_index]);
-        _index--;
-      }
-		print_freeList();
-		return_hdr = (HDR*)freeList[valid_index];
-		_remove(freeList[valid_index]);
-		print_freeList();
-//      printf("%s %u\n","Location of beginning totalMemory: ", totalMemory);
-//     printf("%s %u\n","Location of end of totalMemory: ", totalMemory + *****);
-      printf("%s %u\n","Normal Address(i.e. header location): ", (Addr)((char*)return_hdr ));
-      printf("%s %u\n","Return Address: ", (Addr)((char*)return_hdr+sizeof(HDR) ));
-	  if(return_hdr -> MagicNumber == 3028){
-			return_hdr -> is_free = 1;
-			printf("%s \n","My Malloc.... header in correct location ");
+		int _index = valid_index;
+		while(freeList[_index] == NULL){
+		  _index++;
 		}
-	  else
-			printf("%s \n","My Malloc....WRONG LOCATION ");
+		printf("%s %d\n","New valid Index: ",_index);
+		if(_index > index){
+			printf("%s\n","Cannot Provide Memory Block" );
+			return NULL;
+		 }
+		else{
+		  while (_index > valid_index){
+			SplitBlocks(freeList[_index]);
+			_index--;
+		  }
+			print_freeList();
+			return_hdr = (HDR*)freeList[valid_index];
+			_remove(freeList[valid_index]);
+			print_freeList();
+	//      printf("%s %u\n","Location of beginning totalMemory: ", totalMemory);
+	//     printf("%s %u\n","Location of end of totalMemory: ", totalMemory + *****);
+		  printf("%s %u\n","Normal Address(i.e. header location): ", (Addr)((char*)return_hdr ));
+		  printf("%s %u\n","Return Address: ", (Addr)((char*)return_hdr+sizeof(HDR) ));
+		  if(return_hdr -> MagicNumber == 3028){
+				return_hdr -> is_free = 1;
+				printf("%s \n","My Malloc.... header in correct location ");
+			}
+		  else
+				printf("%s \n","My Malloc....WRONG LOCATION ");
 
-      return (Addr)((char*)return_hdr + sizeof(HDR));
-    }
+		  return (Addr)((char*)return_hdr + sizeof(HDR));
+		}
   }
 
 
 }
-extern int my_free(Addr _a) {
+int my_free(Addr _a) {
   /* Same here! */
 
 //  if (_a < totalMemory || _a > (totalMemory + (blocksize * BlockNum) ))
