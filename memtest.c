@@ -3,7 +3,7 @@
 
 int main(int argc, char ** argv) {
 	int a = init_allocator(4, 100000);
-	printf("%s %d\n", "Total memory allocated" ,a );
+	/*printf("%s %d\n", "Total memory allocated" ,a );
 	printf("%s %d\n", "Total blocks" ,a/4 );
 	//print_freeList();
 	//check_list();
@@ -17,5 +17,7 @@ int main(int argc, char ** argv) {
 	int y = my_free(d);
 	int r = my_free(e);
 	int t = my_free(f);
-	int p = my_free(c);
+	int p = my_free(c);*/
+
+  ackerman_main();
 }
