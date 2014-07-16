@@ -2,7 +2,7 @@
 #include "my_allocator.h"
 
 int main(int argc, char ** argv) {
-	int a = init_allocator(4, 100000);
+	int a = init_allocator(50, 1000000);
 	/*printf("%s %d\n", "Total memory allocated" ,a );
 	printf("%s %d\n", "Total blocks" ,a/4 );
 	//print_freeList();
@@ -21,3 +21,4 @@ int main(int argc, char ** argv) {
 
   ackerman_main();
 }
+`
