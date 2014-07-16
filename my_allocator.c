@@ -31,17 +31,6 @@
 /* DATA STRUCTURES */ 
 /*--------------------------------------------------------------------------*/
 
-  /*  typedef struct header{
-      int MagicNumber;      //initial check to ensure correct address
-      int  is_free;            // 0 = free, 1 = not free
-      int binary_Index;        // 2^binary_index = size
-      int side;                // left = 0; right = 1; no side = 2
-    int inheritance;    // left block holds parent's side; right block holds parent's inheritance; same as size
-      int size;                // size of the block 
-      struct header* next;    // points to next block
-      struct header* prev;    // points to previous block
-} HDR;*/
-
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
 /*--------------------------------------------------------------------------*/
@@ -69,23 +58,19 @@
 //*******************************************************
 void _remove(HDR * _h){
   if(_h -> prev == NULL && _h -> next == NULL){          // only element in list
-           printf("Remove: Only element in List\n");
           freeList[_h ->binary_Index] = NULL;
         }
   if(_h -> prev == NULL && _h -> next != NULL){         // first element in list
-          printf("%s\n", "Remove: First in List");
           freeList[_h ->binary_Index] = _h -> next;
           _h -> next -> prev = NULL;
           _h -> next = NULL;
 
         }
         if(_h -> prev != NULL && _h -> next == NULL){         // last element in list
-           printf("%s\n", "Remove: Last in List");
           _h -> prev -> next = NULL;
           _h -> prev = NULL;
         }
         if(_h -> prev != NULL && _h -> next != NULL){         // in between list
-           printf("%s\n", "Remove: Middle in List");
           _h -> prev -> next = _h -> next;
           _h -> next -> prev = _h -> prev;
           _h -> prev = NULL;
@@ -132,14 +117,12 @@ void SplitBlocks ( HDR * _h){
 			  _h -> prev = NULL;
 			  freeList[b_index] = _h;
 			}
-			printf("%s %u %d\n"," location of _h with size of:", _h, newsize);
-			printf("%s %u %d\n"," location of _hR with size of:", _hR , newsize);	
 		}
 		else
 			printf("%s\n", "error: cannot split last block ");		
 	}		
     else
-      printf("%s\n", "Error no magic number found, ");
+      printf("%s\n", "error: no magic number found, ");
     
 }
 //*******************************************************
@@ -209,24 +192,23 @@ void MergeBlocks ( HDR * _h){
 					}
 					
 				  }
-				  else
-					printf("%s\n","Not the same size blocks" );
+				  else{}
+					//printf("%s\n","error: not the same size blocks" );
 				}
-				else
-				  printf("%s\n","Memory Location for second block is not free" );
-
+				else{}
+				  //printf("%s\n","error: memory location for second block is not free" );
 			}
-			else
-			  printf("%s\n","Memory Location for second block is not valid" );
+			else{}
+			  //printf("%s\n","error: memory location for second block is not valid" );
 		  }    
-		  else
-			printf("%s\n","Memory Location for first block is not free" );
+		  else{}
+			//printf("%s\n","error: memory location for first block is not free" );
 		}
-		  else
-			printf("%s\n","Cannot Merge Top Block");
+		  else{}
+			//printf("%s\n","error: cannot Merge top block");
 	}
-  else
-    printf("%s\n","Memory Location for initial block is not valid" );
+  else{}
+   // printf("%s\n","error: memory location for initial block is not valid" );
 }
 
 int release_allocator(){
@@ -238,11 +220,9 @@ int release_allocator(){
 
 extern unsigned int init_allocator(unsigned int _basic_block_size, unsigned int _length){ 
   if (_basic_block_size < 40){
-    printf("%s %d\n","Block size is being reset. Header size: ", sizeof(HDR));
     blocksize = 40;
   }
   else{
-    printf("%s %d\n","Block size not being reset. Header: ", sizeof(HDR));
     blocksize = _basic_block_size;
   }
   if ((double)(_length/blocksize) < 1)
@@ -271,7 +251,6 @@ extern unsigned int init_allocator(unsigned int _basic_block_size, unsigned int 
   
   totalLength = BlockNum * blocksize;
   totalMemory = totalMemory;
-  printf("%s %d\n", "Index: ", index );
   return totalLength;
 
 }
@@ -358,7 +337,8 @@ Addr my_malloc(unsigned int _length) {
     int valid_index = 0;
 	HDR * return_hdr;
     if (_length < 40){
-      printf("%s\n","Error: requested memory - too small");
+      //printf("%s\n","error: requested memory - too small");
+      return NULL;
     }
   else{
     while (valid_length < _length){
@@ -366,12 +346,9 @@ Addr my_malloc(unsigned int _length) {
       valid_length = pow(2.0,valid_index) * blocksize;
     } 
   }
-  printf("%s %d\n","Length: ",_length);
-  printf("%s %d\n","Valid Index: ",valid_index);
-  printf("%s %d\n","Valid Length: ",valid_length);
 
   if (index < valid_index){
-    printf("%s\n","Error: requested memory - too large");
+    //printf("%s\n","error: requested memory - too large");
 	return NULL;
 	}
   else{
@@ -379,9 +356,8 @@ Addr my_malloc(unsigned int _length) {
 		while(freeList[_index] == NULL){
 		  _index++;
 		}
-		printf("%s %d\n","New valid Index: ",_index);
 		if(_index > index){
-			printf("%s\n","Cannot Provide Memory Block" );
+			//printf("%s\n","error: cannot provide memory block larger than max" );
 			return NULL;
 		 }
 		else{
@@ -389,20 +365,15 @@ Addr my_malloc(unsigned int _length) {
 			SplitBlocks(freeList[_index]);
 			_index--;
 		  }
-			print_freeList();
 			return_hdr = (HDR*)freeList[valid_index];
 			_remove(freeList[valid_index]);
-			print_freeList();
-	//      printf("%s %u\n","Location of beginning totalMemory: ", totalMemory);
-	//     printf("%s %u\n","Location of end of totalMemory: ", totalMemory + *****);
-		  printf("%s %u\n","Normal Address(i.e. header location): ", (Addr)((char*)return_hdr ));
-		  printf("%s %u\n","Return Address: ", (Addr)((char*)return_hdr+sizeof(HDR) ));
 		  if(return_hdr -> MagicNumber == 3028){
 				return_hdr -> is_free = 1;
-				printf("%s \n","My Malloc.... header in correct location ");
 			}
-		  else
-				printf("%s \n","My Malloc....WRONG LOCATION ");
+		  else{
+				//printf("%s \n","error: invalid memory location ");
+        return NULL;
+      }
 
 		  return (Addr)((char*)return_hdr + sizeof(HDR));
 		}
@@ -416,14 +387,14 @@ int my_free(Addr _a) {
 //  if (_a < totalMemory || _a > (totalMemory + (blocksize * BlockNum) ))
  //     printf("%s\n","Address out of bounds");
 	if(_a == NULL){
-		printf("%s \n","error: address is NULL ");
+		//printf("%s \n","error: address is NULL ");
 		return 1;
 	}
 	else{
 
    // _a =  (Addr)((char*)(_a - sizeof(HDR)));
 		HDR* temp = (HDR*)((char*)_a - sizeof(HDR));
-		printf("\n\n%s %d\n\n","Calling my_free on....", temp->size);
+	//	printf("\n\n%s %d\n\n","Calling my_free on....", temp->size);
 		//printf("%s %u\n","Header for temp: ", temp );
 		//printf("%d\n", temp -> MagicNumber );
 		int newindex = temp->binary_Index;
@@ -442,7 +413,6 @@ int my_free(Addr _a) {
          }
 		 MergeBlocks(temp);
   }
-  print_freeList();
   return 0;
 }
 
